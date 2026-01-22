@@ -14,4 +14,8 @@ export class CategoryService {
   create(createCategoryDto: CreateCategoryDto) {
     return this.categoryModel.create(createCategoryDto);
   }
+
+  findAll() {
+    return this.categoryModel.find().exec();
+  }
 }
