@@ -20,21 +20,39 @@ export class ProductsService {
     });
   }
 
-  async findAll(categoryName: string) {
+  async findAll(categoryName: string, page = 1, limit = 10) {
     const filter: any = {};
     if (categoryName) {
-      const category = await this.categoryModel.findOne({
-        category_name: categoryName,
-      });
+      const category = await this.categoryModel
+        .findOne({
+          category_name: categoryName,
+        })
+        .lean();
 
-      if (!category) return [];
+      if (!category) return { products: [], totalPages: 0, currentPage: page };
       filter.category_id = category._id;
     }
 
-    return this.productModel.find(filter).populate('category_id').exec();
+    const total = await this.productModel.countDocuments(filter);
+    const totalPages = Math.ceil(total / limit);
+
+    const products = await this.productModel
+      .find(filter)
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .populate('category_id')
+      .lean()
+      .exec();
+
+    return {
+      products,
+      totalPages,
+      currentPage: page,
+      total,
+    };
   }
 
   findOne(id: string) {
-    return this.productModel.findById(id).populate('category_id').exec();
+    return this.productModel.findById(id).populate('category_id').lean();
   }
 }
