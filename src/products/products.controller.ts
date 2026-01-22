@@ -1,7 +1,7 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiQuery, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Products')
 @Controller('products')
@@ -13,9 +13,10 @@ export class ProductsController {
     return this.productsService.create(createProductDto);
   }
 
+  @ApiQuery({ name: 'filter', required: false, enum: ['drink', 'food'] })
   @Get()
-  findAll() {
-    return this.productsService.findAll();
+  findAll(@Query('filter') filter: string) {
+    return this.productsService.findAll(filter);
   }
 
   @Get(':id')
