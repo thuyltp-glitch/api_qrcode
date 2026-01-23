@@ -1,6 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateTableDto } from './dto/create-table.dto';
-import { UpdateTableDto } from './dto/update-table.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Table } from './schemas/table.schema';
 import { Model } from 'mongoose';
@@ -14,5 +13,23 @@ export class TablesService {
 
   create(createTableDto: CreateTableDto) {
     return this.tableModel.create(createTableDto);
+  }
+
+  async findByCode(tableCode: string) {
+    const table = await this.tableModel.findOne({ table_code: tableCode });
+
+    if (!table) {
+      throw new NotFoundException(`Không tìm thấy bàn với mã: ${tableCode}`);
+    }
+
+    return table;
+  }
+
+  async findById(tableId: string) {
+    return this.tableModel.findById(tableId);
+  }
+
+  async findAll() {
+    return this.tableModel.find().exec();
   }
 }
