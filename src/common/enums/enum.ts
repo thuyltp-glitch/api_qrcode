@@ -13,3 +13,18 @@ export enum CART_STATUS {
   SUBMITTED = 'Submitted',
   CLOSED = 'Closed',
 }
+
+export enum ORDER_STATUS {
+  NEW = 'NEW',
+  PROCESSING = 'PROCESSING',
+  DONE = 'DONE',
+  PAID = 'PAID',
+  CANCEL = 'CANCEL',
+}
+
+export enum ORDER_ITEM_STATUS {
+  PENDING = 1,
+  PREPARING = 2,
+  READY = 3,
+  SERVED = 4,
+}
