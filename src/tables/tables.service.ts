@@ -27,10 +27,6 @@ export class TablesService {
       throw new NotFoundException(`Không tìm thấy bàn với mã: ${tableCode}`);
     }
 
-    if (table.status === TABLE_STATUS.UNAVAILABLE) {
-      throw new BadRequestException('Bàn này đang có người ngồi');
-    }
-
     return table;
   }
 
