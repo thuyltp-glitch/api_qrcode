@@ -10,8 +10,15 @@ import { OrderItem } from './schemas/order-item.schema';
 import { Cart } from '../carts/schemas/cart.schema';
 import { CartItem } from '../carts/schemas/cart-item.schema';
 import { Product } from '../products/schemas/product.schema';
-import { ORDER_STATUS, ORDER_ITEM_STATUS } from '../common/enums/enum';
+import {
+  ORDER_STATUS,
+  ORDER_ITEM_STATUS,
+  SESSION_STATUS,
+  TABLE_STATUS,
+} from '../common/enums/enum';
 import { CART_STATUS } from '../common/enums/enum';
+import { Session } from '../sessions/schemas/session.schema';
+import { Table } from '../tables/schemas/table.schema';
 
 @Injectable()
 export class OrdersService {
@@ -26,6 +33,10 @@ export class OrdersService {
     private readonly cartItemModel: Model<CartItem>,
     @InjectModel(Product.name)
     private readonly productModel: Model<Product>,
+    @InjectModel(Session.name)
+    private readonly sessionModel: Model<Session>,
+    @InjectModel(Table.name)
+    private readonly tableModel: Model<Table>,
   ) {}
 
   async createOrderFromCart(cartId: string) {
@@ -202,14 +213,41 @@ export class OrdersService {
       throw new NotFoundException('Không tìm thấy đơn hàng');
     }
 
+    if (order.status === ORDER_STATUS.CANCEL) {
+      throw new BadRequestException('Không thể cập nhật đơn hàng đã hủy');
+    }
+
+    if (status === ORDER_STATUS.CANCEL) {
+      await this.handleCancelOrder(order);
+    }
+
     order.status = status;
     return order.save();
+  }
+
+  private async handleCancelOrder(order: any) {
+    const session = await this.sessionModel.findById(order.session_id);
+    if (session) {
+      // Đóng session
+      session.status = SESSION_STATUS.CLOSED;
+      session.ended_at = new Date();
+      await session.save();
+
+      // Giải phóng bàn
+      await this.tableModel.findByIdAndUpdate(session.table_id, {
+        status: TABLE_STATUS.AVAILABLE,
+      });
+    }
   }
 
   async cancelOrder(orderId: string) {
     const order = await this.orderModel.findById(orderId);
     if (!order) {
       throw new NotFoundException('Không tìm thấy đơn hàng');
+    }
+
+    if (order.status === ORDER_STATUS.CANCEL) {
+      return order; // Đã hủy rồi thì thôi
     }
 
     if (
@@ -221,6 +259,7 @@ export class OrdersService {
       );
     }
 
+    await this.handleCancelOrder(order);
     order.status = ORDER_STATUS.CANCEL;
     return order.save();
   }

@@ -37,4 +37,16 @@ export class TablesService {
   async findAll() {
     return this.tableModel.find().exec();
   }
+
+  async update(id: string, updateData: any) {
+    const updated = await this.tableModel.findByIdAndUpdate(id, updateData, { new: true }).exec();
+    if (!updated) throw new NotFoundException('Table not found');
+    return updated;
+  }
+
+  async remove(id: string) {
+    const deleted = await this.tableModel.findByIdAndDelete(id).exec();
+    if (!deleted) throw new NotFoundException('Table not found');
+    return { message: 'Table deleted successfully' };
+  }
 }
