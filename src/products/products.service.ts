@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -20,7 +20,7 @@ export class ProductsService {
     });
   }
 
-  async findAll(categoryName: string, page = 1, limit = 10) {
+  async findAll(categoryName?: string, page = 1, limit = 10) {
     const filter: any = {};
     if (categoryName) {
       const category = await this.categoryModel
@@ -54,5 +54,17 @@ export class ProductsService {
 
   findOne(id: string) {
     return this.productModel.findById(id).populate('category_id').lean();
+  }
+
+  async update(id: string, updateData: any) {
+    const updated = await this.productModel.findByIdAndUpdate(id, updateData, { new: true }).exec();
+    if (!updated) throw new NotFoundException('Product not found');
+    return updated;
+  }
+
+  async remove(id: string) {
+    const deleted = await this.productModel.findByIdAndDelete(id).exec();
+    if (!deleted) throw new NotFoundException('Product not found');
+    return { message: 'Product deleted successfully' };
   }
 }
